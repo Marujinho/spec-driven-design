@@ -122,6 +122,11 @@ Runs before `/create-plan`.
 |---|---|---|---|---|
 {One table per standard beyond the default. Rows are its controls as resolved per CLAUDE.md § Standards. Omit this block when there are none.}
 
+### Authorization matrix
+| Route / handler | Who may call it | Tenant scope | Ownership | Parent ids | Business-state rules | Sibling that already guards this resource |
+|---|---|---|---|---|---|---|
+{One row per route, job, or handler this feature adds or changes that reads private data or writes anything. Include follow-up routes (finish, cancel, undo, retry, callbacks). Find the existing screen or handler that already guards the same resource and copy every rule it enforces into the row, or say why it doesn't apply. Each row becomes an acceptance criterion with a test for the allowed caller and for each refused one.}
+
 **Existing controls at risk**: {controls this change could weaken, or "None identified"}
 **Secrets / PII touched**: {what data, where it flows, how it's stored — or "None"}
 
@@ -166,6 +171,7 @@ Runs before `/create-plan`.
 - Every requirement traces to a user story or goal; every goal has a metric.
 - A convention without a `file:line` is either unsourced or PROPOSED. Say which.
 - Anything from your head, not the source, goes in the assumptions table.
+- Every route that reads private data or writes has a row in the authorization matrix, and every rule of its sibling screen is either required or explicitly excluded.
 - Every row of every standard in scope gets an answer. "Applies: no" is an answer; a blank cell is not. A standard you couldn't resolve goes in Open Questions.
 - A security requirement with no test in the same row is incomplete.
 - Open questions remaining means Status is BLOCKED. Don't plan against it.

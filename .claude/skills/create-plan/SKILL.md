@@ -78,7 +78,7 @@ Read-only until the plan is approved. The plan file is the only thing you write 
 |---|---|
 | FR-1 | T1 |
 | A01 | T1, T3 |
-{Every Must FR, every NFR, every applicable OWASP row, every §17 test. A row without a task is a gap in the plan.}
+{Every Must FR, every NFR, every applicable OWASP row, every row of the PRD's authorization matrix (allowed caller and each refused one), every §17 test. A row without a task is a gap in the plan.}
 
 ## Risks
 | Risk | Where it bites | What to do if it does |

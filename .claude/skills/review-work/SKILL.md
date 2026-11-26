@@ -41,7 +41,17 @@ Nothing here is advisory. If you find a problem, fix it and re-run the checks.
    - A false positive is recorded with the `file:line` that disproves it.
    - A finding is never dropped because it's inconvenient.
 
-4. **Behavior pass.** Read the changed logic for what it lets happen, not what it was meant to do:
+4. **Authorization matrix.** Before any other judgment on access, build a table with one row per route, endpoint, job, or handler the branch adds or changes that reads private data or writes anything. Include follow-up routes (finish, cancel, undo, retry, callbacks) and routes whose code did not change but whose behavior did.
+
+   | Route | Who may call it | Tenant scope | Ownership (caller owns the object) | Parent ids (object belongs to every id in the route/body) | Business-state rules (deadline, status, already done, delivered, feature flag) | Checked before the write? | `file:line` |
+   |---|---|---|---|---|---|---|---|
+
+   - **Filling a cell.** A cell is filled only with the `file:line` of the check that enforces it, or "N/A" with a reason. "Unguessable id" or "the UI never sends it" is not an answer.
+   - **Parity.** Find the existing screen or handler that already guards the same resource, for example the page where the user edits that record or the endpoint that saves it. Every rule it enforces must appear in the new route's row, or the row must say why it doesn't apply. A rule the sibling enforces and the new route skips is a finding.
+   - **Severity.** An empty cell, or a check that runs after the write, is at least High. It blocks the PR until it is fixed or the user explicitly accepts it.
+   - **Output.** The matrix goes into the review output as is.
+
+5. **Behavior pass.** Read the changed logic for what it lets happen, not what it was meant to do:
    - **Server-side state.** Every value the client sends that decides state must be checked against what the server stored. That covers an outcome, a status, an id, and any text forwarded to another system. If an "it worked" decision rests on a counter of attempts, it must instead rest on a recorded success.
    - **Authorization on every mutating route.** This includes follow-up routes (finish, cancel, undo, retry), not only the one that creates the object. The object must belong to the caller and to every parent id the route or body names. An unguessable id is not authorization.
    - **Concurrency.**
@@ -53,7 +63,7 @@ Nothing here is advisory. If you find a problem, fix it and re-run the checks.
      - A late response after the user left.
      - A retry after a partial failure.
 
-5. **Performance pass.** Read the changed logic for work that doesn't need doing:
+6. **Performance pass.** Read the changed logic for work that doesn't need doing:
    - Queries inside loops, or a loop that could be one query — N+1 is the most common one and the most expensive
    - Repeated computation that could be hoisted, memoized, or done once
    - Nested iteration over the same data where a map or set gives you a lookup
@@ -63,7 +73,7 @@ Nothing here is advisory. If you find a problem, fix it and re-run the checks.
 
    Judge against expected data size, not aesthetics. A nested loop over 5 config entries is fine; the same shape over user records is not.
 
-6. **Standards pass.** Resolve every standard in scope — `standards` from CLAUDE.md § Pipeline settings, each `--standard`, and whatever the PRD header names — per § Standards. OWASP Top 10:2025 is below; any other becomes a checklist of the same shape before you start. Then walk every row of every standard against the diff — one at a time, no skipping.
+7. **Standards pass.** Resolve every standard in scope — `standards` from CLAUDE.md § Pipeline settings, each `--standard`, and whatever the PRD header names — per § Standards. OWASP Top 10:2025 is below; any other becomes a checklist of the same shape before you start. Then walk every row of every standard against the diff — one at a time, no skipping.
 
    | # | Category |
    |---|---|
@@ -86,16 +96,16 @@ Nothing here is advisory. If you find a problem, fix it and re-run the checks.
 
    New dependencies get checked for known CVEs and for whether they were needed at all.
 
-7. **Translation pass.** If the project ships translation catalogs, every new user-visible string must exist in every locale the project ships, not only the one it was written in:
+8. **Translation pass.** If the project ships translation catalogs, every new user-visible string must exist in every locale the project ships, not only the one it was written in:
    - Search the catalogs for each new key.
    - Find new literals that bypass the translation helper in templates and in error messages returned to the UI.
    - A string present in one locale only is a finding.
 
-8. **Fix and re-run.** Fix everything Critical and High, plus anything that fails a static check. After *any* code change, re-run lint, types, and tests — a performance rewrite is exactly the kind of change that breaks an edge case silently.
+9. **Fix and re-run.** Fix everything Critical and High, plus anything that fails a static check. After *any* code change, re-run lint, types, and tests — a performance rewrite is exactly the kind of change that breaks an edge case silently.
 
    Loop until clean. Leave Medium and Low as findings if the fix is a design decision rather than a correction. A Medium finding from the behavior pass that lets the client change server state (status, authorization, prompt content) is fixed, not left open.
 
-9. **Open the PR** — only if everything above passes. See below. Clear the stage marker first: `rm -f .claude/.stage`. Under `autonomy: suggest` (CLAUDE.md § Execution boundaries) stop here and hand back the diff and the review instead.
+10. **Open the PR** — only if everything above passes. See below. Clear the stage marker first: `rm -f .claude/.stage`. Under `autonomy: suggest` (CLAUDE.md § Execution boundaries) stop here and hand back the diff and the review instead.
 
 ## PR
 
@@ -120,11 +130,15 @@ Body: what changed and why, the validation results table, any Medium/Low finding
 | Types | ✅/❌ | {n errors or "passed"} |
 | Tests | ✅/❌ | {n passed, m failed} |
 | Independent read | ✅/⚠️ | {n findings, k confirmed, m false positives} |
+| Authorization matrix | ✅/❌ | {n routes, k rows complete, m gaps} |
 | Behavior | ✅/⚠️ | {n issues, k fixed} |
 | Performance | ✅/⚠️ | {n issues, k fixed} |
 | {standard} | ✅/⚠️/❌ | {critical/high/medium/low counts — one row per standard in scope} |
 | Translations | ✅/❌/N/A | {missing keys per locale} |
 | PRD DoD | ✅/❌ | {n of m met} |
+
+### Authorization matrix
+{the table from step 4}
 
 ### Fixed
 - `{file:line}` — {what was wrong, what changed}
@@ -145,6 +159,7 @@ Severity: **Critical** exploitable now · **High** real weakness · **Medium** d
 ## Rules
 
 - The review covers the whole branch, and an independent subagent reads it before you trust your own read.
+- Every route that reads private data or writes gets a complete row in the authorization matrix, with parity against the existing screen that guards the same resource. A gap is High.
 - Every row of every standard in scope gets answered. "No" is an answer; silence isn't. An unresolved standard is a FAIL, not an omission.
 - Any code change means re-running lint, types, and tests. No exceptions.
 - Critical or High open means FAIL and no PR.
