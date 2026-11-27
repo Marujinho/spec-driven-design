@@ -18,7 +18,7 @@ Read-only until the plan is approved. The plan file is the only thing you write 
 
 1. **Resolve the PRD.** Mark the stage first: `printf create-plan > .claude/.stage` (CLAUDE.md § Hooks). Then per CLAUDE.md § Inputs. Status BLOCKED, or `Approval: pending` without `--auto` → stop; the PRD isn't ready. Read all of it — §7, §8, §11, §12, §17 and §19 are this plan's inputs.
 
-2. **Understand.** Read the code PRD §11 names, what it imports, what imports it, and the closest existing feature. Trace the path a request will take through the new code. Know the test setup — runner, fixtures, how the closest feature is tested.
+2. **Understand.** Read the code PRD §11 names, what it imports, what imports it, the closest existing feature, and the newest code of the same kind in the module. When the closest feature is older and built differently, mirror the newest code. Trace the path a request will take through the new code. Know the test setup — runner, fixtures, how the closest feature is tested.
 
    **Subagents**: when the scope is uncertain or spans several areas, dispatch Explore agents in parallel, each with one focus — existing implementations, the data layer, test patterns, external dependencies. One agent, or none, when the PRD already names the files. Minimum necessary; findings come back with `file:line`.
 
@@ -66,6 +66,7 @@ Read-only until the plan is approved. The plan file is the only thing you write 
 - **Covers**: FR-1, NFR-2, A01
 - **Files**: `path/one.ts` (edit), `path/one.test.ts` (new)
 - **Mirror**: `path/similar.ts:40-88` — {what to copy from it}
+- **Layer**: {where this code sits per PRD §11 Architecture rules, how its dependencies are wired, and which existing repository or helper it reuses — or the search that found none}
 - **Do**: {the change, specific enough that two engineers would write roughly the same code}
 - **Tests**: {cases — happy path, error cases, boundaries}
 - **Check**: `{command}` → {expected}
@@ -78,7 +79,7 @@ Read-only until the plan is approved. The plan file is the only thing you write 
 |---|---|
 | FR-1 | T1 |
 | A01 | T1, T3 |
-{Every Must FR, every NFR, every applicable OWASP row, every §17 test. A row without a task is a gap in the plan.}
+{Every Must FR, every NFR, every applicable OWASP row, every row of the PRD's authorization matrix (allowed caller and each refused one), every §17 test. A row without a task is a gap in the plan.}
 
 ## Risks
 | Risk | Where it bites | What to do if it does |
