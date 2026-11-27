@@ -65,6 +65,8 @@ Runs after `/create-plan`. Executes the accepted plan — nothing it didn't say.
 - Never start a task on a red tree. Never leave one that way.
 - One task, one commit. A commit that mixes tasks can't be reviewed or reverted on its own.
 - Mirror the named `file:line`, even where you'd write it differently.
+- Before writing a query, helper or UI utility, search for an existing one and use it. Put code in the layer the module uses for it and wire dependencies the way the module does. No `new` fallbacks for collaborators and no production branches that exist only for tests.
+- A change to a shared file, a dependency, or a lockfile is listed in the commit message with what it changes for users outside the feature.
 - Don't fix inherited failures silently. Don't skip, disable, or `any` your way past a check.
 - A DoD item you can't demonstrate is unmet. Say so.
 - A non-local deviation from the plan stops the run, attended or not. Unattended isn't unaccountable.

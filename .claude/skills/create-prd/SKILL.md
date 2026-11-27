@@ -18,6 +18,8 @@ Runs before `/create-plan`.
 
 2. **Look at the codebase.** `ls`, `git log --oneline -10`, `CLAUDE.md` / `README.md`, plus the closest existing feature to the one being asked for. Pull out: stack and versions, where this kind of code lives, naming conventions, error handling, test patterns — each with a `file:line` source.
 
+   The closest feature can be legacy. Read the most recently changed code of the same kind in the same module too, and any architecture doc or ADR. Where they disagree, the newest code is the convention. Record the module's architecture rules: where database access lives, where business rules live, how dependencies are wired, how errors reach the HTTP layer, how routes are documented, size limits, and which existing repositories and helpers the feature must reuse.
+
    Empty repo? Then propose those conventions instead. One concrete choice per decision, not a menu.
 
    **Subagents**: if the recon splits into independent threads — conventions, data layer, tests, external dependencies — dispatch them in parallel and have each return findings with `file:line` refs. Skip this on a small or familiar codebase; one agent reading four files directly beats four agents reporting back.
@@ -93,6 +95,10 @@ Runs before `/create-plan`.
 **Stack & areas affected**: {Tech + versions. Which parts of the codebase this touches, directly and indirectly.}
 
 **Conventions**: {Naming, structure, error handling, tests — each with `file:line`, or marked PROPOSED for greenfield. Include a real snippet where it's clearer than prose.}
+
+**Architecture rules**: {One row per rule — layer, wiring, error flow, reuse — each with the `file:line` of the newest code that follows it. List the existing repositories, helpers and components the feature must reuse instead of rewriting.}
+
+**Blast radius**: {Shared files, templates, dependencies and lockfiles this touches, and what changes for users who never use the feature. "None" only after checking.}
 
 **Data & contracts**: {Entities, schema changes, API/event shapes, migrations, backwards-compat. Or "None".}
 
